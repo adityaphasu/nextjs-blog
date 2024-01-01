@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Blog",
-  description: "A blog built with Next.js",
+  description: "Created by Aditya Phasu",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
