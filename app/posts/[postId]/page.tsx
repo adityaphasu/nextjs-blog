@@ -1,10 +1,21 @@
 import getFormattedDate from "@/lib/getFormattedDate";
-import { getPostData, getSortedPostsData } from "@/lib/posts";
+import { getPostByName, getPostsMeta } from "@/lib/posts";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import "highlight.js/styles/github-dark.css";
 
-export function generateStaticParams() {
-  const posts = getSortedPostsData();
+export const revalidate = 86400;
+
+type Props = {
+  params: {
+    postId: string;
+  };
+};
+
+export async function generateStaticParams() {
+  const posts = await getPostsMeta();
+
+  if (!posts) return [];
 
   return posts.map((post) => ({
     params: {
@@ -13,43 +24,47 @@ export function generateStaticParams() {
   }));
 }
 
-export function generateMetadata({ params }: { params: { postId: string } }) {
-  const posts = getSortedPostsData();
-  const { postId } = params;
-
-  const post = posts.find((post) => post.id === postId);
+export async function generateMetadata({ params: { postId } }: Props) {
+  const post = await getPostByName(`${postId}.mdx`);
 
   if (!post) {
-    return "Post not found";
+    return {
+      title: "Post not found",
+    };
   }
 
   return {
-    title: post.title,
+    title: post.meta.title,
   };
 }
 
-export default async function Post({ params }: { params: { postId: string } }) {
-  const posts = getSortedPostsData(); //deduped
-  const { postId } = params;
+export default async function Post({ params: { postId } }: Props) {
+  const post = await getPostByName(`${postId}.mdx`); //deduped
 
-  if (!posts.find((post) => post.id === postId)) {
-    return notFound();
-  }
+  if (!post) notFound();
 
-  const { title, date, contentHtml } = await getPostData(postId);
+  const { meta, content } = post;
 
-  const formattedDate = getFormattedDate(date);
+  const tags = meta.tags.map((tag, i) => (
+    <Link key={i} href={`/tags/${tag}`}>
+      {tag}
+    </Link>
+  ));
+
+  const formattedDate = getFormattedDate(meta.date);
 
   return (
-    <main className="px-6 prose prose-xl prose-slate dark:prose-invert mx-auto">
-      <h1 className="text-3xl mt-4 mb-0">{title}</h1>
-      <p className="mt-0">{formattedDate}</p>
-      <article>
-        <section dangerouslySetInnerHTML={{ __html: contentHtml }} />
-        <p>
-          <Link href="/">Back to Home</Link>
+    <>
+      <h2 className="text-3xl mt-10 mb-0">{meta.title}</h2>
+      <p className="mt-0 text-sm">{formattedDate}</p>
+      <article>{content}</article>
+      <section>
+        <h3>Related:</h3>
+        <div className="flex flex-row gap-4">{tags}</div>
+        <p className="mb-10">
+          <Link href="/">Back to home</Link>
         </p>
-      </article>
-    </main>
+      </section>
+    </>
   );
 }
