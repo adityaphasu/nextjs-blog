@@ -2,7 +2,14 @@
 
 ## Description
 
-A simple practice blog project in which the blogs are written in markdown and are server side generated. The project uses dynamic routes to generate the blog pages.
+A blog project to practice the key concepts of Next JS.
+
+## Features
+
+- Pulls in blogs from [test-blogposts](https://github.com/adityaphasu/test-blogposts).
+- The blogs are rendered from mdx files.
+- Uses Rehype highlight to highlight code blocks.
+- Uses ondemand revalidation to update the blogs.
 
 ## Technologies
 
